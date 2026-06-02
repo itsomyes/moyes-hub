@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="description" content="Moyes Hub - Sistema personal estructurado">
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Moyes%20Hub%22,%22short_name%22:%22Hub%22,%22start_url%22:%22./%22,%22display%22:%22standalone%22,%22background_color%22:%22%23ffffff%22,%22theme_color%22:%22%232563eb%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20192%20192%27%3E%3Crect%20fill=%27%232563eb%27%20width=%27192%27%20height=%27192%27/%3E%3Ctext%20x=%2750%25%27%20y=%2750%25%27%20font-size=%27100%27%20fill=%27white%27%20text-anchor=%27middle%27%20dominant-baseline=%27central%27%20font-weight=%27bold%27%3EM%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22192x192%22,%22type%22:%22image/svg+xml%22}]}">
+    <title>Moyes Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #ffffff;
+            color: #1a202c;
+            min-height: 100vh;
+            padding-bottom: 100px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 0.9em;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 14px;
+            border: none;
+            background: #edf2f7;
+            color: #2d3748;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .tab-btn:active {
+            transform: scale(0.98);
+        }
+
+        .content {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            color: #2563eb;
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .card-subtitle {
+            color: #718096;
+            font-size: 0.9em;
+            margin-bottom: 12px;
+        }
+
+        .card-content {
+            color: #2d3748;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #718096;
+        }
+
+        .metric-value {
+            color: #22863a;
+            font-weight: 700;
+        }
+
+        ul, ol {
+            margin-left: 20px;
+            color: #2d3748;
+        }
+
+        li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .highlight {
+            color: #d97706;
+            font-weight: 600;
+        }
+
+        .success {
+            color: #22863a;
+        }
+
+        .warning {
+            color: #cb2431;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 600px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .dashboard-item {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border: 1px solid #93c5fd;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .dashboard-label {
+            color: #1e40af;
+            font-size: 0.8em;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .dashboard-value {
+            color: #1e3a8a;
+            font-size: 1.6em;
+            font-weight: 700;
+        }
+
+        .dashboard-note {
+            color: #1e40af;
+            font-size: 0.75em;
+            margin-top: 6px;
+        }
+
+        .checklist {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .checklist-item:hover {
+            background: #f7fafc;
+        }
+
+        .checklist-item input {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .checklist-item.completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+            color: #a0aec0;
+        }
+
+        .checklist-item.completed input {
+            accent-color: #22863a;
+        }
+
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 MOYES HUB</h1>
+            <p class="subtitle">Sistema estructurado | Ejecución sin fricciones</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+            <button class="tab-btn" onclick="switchTab('gym')">🏋️ Gimnasio</button>
+            <button class="tab-btn" onclick="switchTab('nutrition')">🍽️ Nutrición</button>
+            <button class="tab-btn" onclick="switchTab('tdah')">🧠 TDAH</button>
+            <button class="tab-btn" onclick="switchTab('claude')">💻 Claude & Code</button>
+            <button class="tab-btn" onclick="switchTab('lectura')">📖 Leer/Escritura</button>
+        </div>
+
+        <div class="content">
+            <!-- DASHBOARD -->
+            <div id="dashboard" class="tab-content active">
+                <div class="dashboard-grid">
+                    <div class="dashboard-item" style="background: linear-gradient(135deg, #e9d5ff, #ddd6fe);">
+                        <div class="dashboard-label">GIMNASIO L/M/V</div>
+                        <div class="dashboard-value">Ajustado</div>
+                        <div class="dashboard-note">Sin agarre completo aún</div>
+                    </div>
+                    <div class="dashboard-item" style="background: linear-gradient(135deg, #fee2e2, #fecaca);">
+                        <div class="dashboard-label">VIAJE TREN</div>
+                        <div class="dashboard-value">8-9h</div>
+                        <div class="dashboard-note">Mañana: Poblar bases</div>
+                    </div>
+                    <div class="dashboard-item" style="background: linear-gradient(135deg, #cffafe, #a5f3fc);">
+                        <div class="dashboard-label">CLAUDE & CODE</div>
+                        <div class="dashboard-value">Fase 1</div>
+                        <div class="dashboard-note">Sin presión, aprende</div>
+                    </div>
+                    <div class="dashboard-item" style="background: linear-gradient(135deg, #dcfce7, #bbf7d0);">
+                        <div class="dashboard-label">LECTURA</div>
+                        <div class="dashboard-value">Nuevo</div>
+                        <div class="dashboard-note">Hábito a construir</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📋 CHECKLIST SEMANAL</div>
+                    <div class="checklist">
+                        <label class="checklist-item">
+                            <input type="checkbox"> Lunes: Entreno L + Tema DGT
+                        </label>
+                        <label class="checklist-item">
+                            <input type="checkbox"> Martes: Entreno M + Claude basics
+                        </label>
+                        <label class="checklist-item">
+                            <input type="checkbox"> Miércoles: Entreno V + Lectura 30 min
+                        </label>
+                        <label class="checklist-item">
+                            <input type="checkbox"> Jueves: Moto con compañeros
+                        </label>
+                        <label class="checklist-item">
+                            <input type="checkbox"> Diario: 10 min rehab + 30 min Claude/ComfyUI
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GIMNASIO -->
+            <div id="gym" class="tab-content">
+                <div class="card">
+                    <div class="card-title">🏋️ RUTINA L/M/V (POST-CIRUGÍA)</div>
+                    <div class="card-content">
+                        <p><span class="highlight">Limitación:</span> Sin agarre completo. ROM limitado brazos.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">✅ LUNES - PIERNAS + CORE</div>
+                    <div class="card-content">
+                        <ul>
+                            <li>Leg Press: 4x8-10</li>
+                            <li>Extensiones cuádriceps: 3x12</li>
+                            <li>Leg Curl: 3x10</li>
+                            <li>Press de cadera: 3x12</li>
+                            <li>Plancha: 3x45-60s</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">✅ MIÉRCOLES - ESPALDA</div>
+                    <div class="card-content">
+                        <ul>
+                            <li>Lat pulldown (máquina): 4x8-10</li>
+                            <li>Remo máquina: 3x10</li>
+                            <li>Back extension: 3x12</li>
+                            <li>Face pulls: 3x15</li>
+                            <li>Caminata granjero (1 mano): 3x30m</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">✅ VIERNES - PECHO + HOMBROS</div>
+                    <div class="card-content">
+                        <ul>
+                            <li>Press pecho máquina: 4x8-10</li>
+                            <li>Aperturas pecho: 3x12</li>
+                            <li>Elevaciones laterales: 3x12</li>
+                            <li>Press hombros máquina: 3x10</li>
+                            <li>Plank lateral: 3x30s c/lado</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📈 PROGRESIÓN 4 SEMANAS</div>
+                    <div class="card-content">
+                        <div class="metric">
+                            <span class="metric-label">Semanas 1-2:</span>
+                            <span>Acostúmbrate, mano 50%</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Semanas 3-4:</span>
+                            <span>Incrementa peso piernas +10%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NUTRICIÓN -->
+            <div id="nutrition" class="tab-content">
+                <div class="card">
+                    <div class="card-title">🍽️ PLAN NUTRICIONAL</div>
+                    <div class="card-subtitle">Construcción musculatura | 70kg → ganancia muscular</div>
+                    <div class="card-content">
+                        <p><span class="highlight">Macros:</span> 154g proteína/día | 30% grasas | 50% carbos</p>
+                        <p><span class="highlight">Kcal:</span> 2000-2200/día</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📋 ESTRUCTURA DIARIA</div>
+                    <div class="card-content">
+                        <p><strong>DESAYUNO (6:00am)</strong><br>3 huevos + avena + plátano + aceite<br><span class="success">~600 kcal</span></p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">SNACK (10:00am)</div>
+                    <div class="card-content">
+                        <p>Pechuga pollo + manzana + almendras<br><span class="success">~400 kcal</span></p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">COMIDA (14:00)</div>
+                    <div class="card-content">
+                        <p>Salmón/pez blanco + arroz + ensalada<br><span class="success">~650 kcal</span></p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">MERIENDA (17:00)</div>
+                    <div class="card-content">
+                        <p>Batido proteína + avena + plátano<br><span class="success">~350 kcal</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TDAH -->
+            <div id="tdah" class="tab-content">
+                <div class="card">
+                    <div class="card-title">🧠 GESTIÓN TDAH + DOPAMINA</div>
+                    <div class="card-subtitle">Hipodopamina tardes → búsqueda múltiple → nunca terminas</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">⚡ TU SOLUCIÓN</div>
+                    <div class="card-content">
+                        <ul>
+                            <li><span class="highlight">Cierre ciclos:</span> 1 tarea = 1 ciclo completo</li>
+                            <li><span class="highlight">Sapo primero:</span> Tarea incómoda ANTES (Goggins)</li>
+                            <li><span class="highlight">Presente:</span> Solo hoy, esta hora, este paso</li>
+                            <li><span class="highlight">Estímulo externo:</span> Moto (jueves) + Gym (L/M/V)</li>
+                            <li><span class="highlight">Sistema externo:</span> Este HUB = tu cerebro digital</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">✅ RUTINA DIARIA POST-TRABAJO</div>
+                    <div class="card-content">
+                        <div class="metric">
+                            <span class="metric-label">15:30</span>
+                            <span>Llego casa (trabajo termina 3pm)</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">15:30-16:15</span>
+                            <span>SAPO (tema DGT o prep dieta)</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">16:15-17:00</span>
+                            <span>Gimnasio (L/M/V)</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">17:30-18:00</span>
+                            <span>Ducha + comida</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">18:00-19:00</span>
+                            <span>Claude/ComfyUI (sin deadline)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🚨 REGLAS INQUEBRANTABLES</div>
+                    <div class="card-content">
+                        <ul>
+                            <li><span class="warning">NO</span> saltes entre ideas hasta terminar</li>
+                            <li><span class="warning">NO</span> busques dopamina rápida (redes, gaming)</li>
+                            <li><span class="warning">NO</span> cambies proyecto cada semana</li>
+                            <li><span class="success">SÍ</span> completa ciclos pequeños</li>
+                            <li><span class="success">SÍ</span> usa este HUB para preguntar</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CLAUDE & CODE -->
+            <div id="claude" class="tab-content">
+                <div class="card">
+                    <div class="card-title">💻 CLAUDE & CLAUDE CODE</div>
+                    <div class="card-subtitle">Aprendizaje estructurado en fases</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🎓 FASES DE APRENDIZAJE</div>
+                    <div class="card-content">
+                        <div class="metric">
+                            <span class="metric-label">Fase 1 (Sem 1-2)</span>
+                            <span>Conceptos base, prompts efectivos</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Fase 2 (Sem 3-4)</span>
+                            <span>Claude Code, instalación, scripts</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Fase 3 (Sem 5+)</span>
+                            <span>Proyectos reales, automación, MCP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📚 RECURSOS</div>
+                    <div class="card-content">
+                        <ul>
+                            <li><a href="https://docs.anthropic.com" target="_blank">docs.anthropic.com</a> - Documentación oficial</li>
+                            <li>Prompting 101: Claridad, ejemplos, formato</li>
+                            <li>Claude Code: Node.js + ASUS ROG setup</li>
+                            <li>MCP Servers: Integración herramientas</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">✅ TUS PRÓXIMOS PASOS</div>
+                    <div class="card-content">
+                        <ol>
+                            <li>Lee intro Claude (ya hecho)</li>
+                            <li>Haz 5 prompts diferentes</li>
+                            <li>Descarga Claude Code en ASUS ROG</li>
+                            <li>Corre Hello World</li>
+                            <li>Integra con primer proyecto real</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LECTURA/ESCRITURA -->
+            <div id="lectura" class="tab-content">
+                <div class="card">
+                    <div class="card-title">📖 HÁBITO: LEER/ESCRITURA</div>
+                    <div class="card-subtitle">Construcción de hábito nuevo</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🎯 OBJETIVO</div>
+                    <div class="card-content">
+                        <p>Integrar lectura/escritura como práctica diaria. Mejora vocabulario, claridad mental, dopamina sostenible.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">⏱️ RUTINA PROPUESTA</div>
+                    <div class="card-content">
+                        <div class="metric">
+                            <span class="metric-label">Lunes-Viernes</span>
+                            <span>30 min lectura post-trabajo</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Miércoles</span>
+                            <span>15 min escritura (diario/notas)</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Fin de semana</span>
+                            <span>Lectura libre (sin deadline)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">📚 GÉNEROS RECOMENDADOS</div>
+                    <div class="card-content">
+                        <ul>
+                            <li>Estoicismo (Marco Aurelio, Epicteto, Séneca)</li>
+                            <li>Psicología (Kahneman, Clear, Dispenza)</li>
+                            <li>Productividad/Hábitos (Tracy, Goggins)</li>
+                            <li>Ficción (para equilibrio)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">✍️ ESCRITURA</div>
+                    <div class="card-content">
+                        <ul>
+                            <li>Diario de progresos (gimnasio, trabajo, objetivos)</li>
+                            <li>Reflexiones estoicas (1-2 párrafos daily)</li>
+                            <li>Ideas/proyectos (brainstorm sin filtro)</li>
+                            <li>Lecciones aprendidas (semanal)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'moyes-hub-v1';
+                const urlsToCache = ['/'];
+                
+                self.addEventListener('install', event => {
+                    event.waitUntil(caches.open(CACHE_NAME));
+                });
+                
+                self.addEventListener('fetch', event => {
+                    event.respondWith(
+                        caches.match(event.request).then(response => {
+                            return response || fetch(event.request);
+                        }).catch(() => caches.match(event.request))
+                    );
+                });
+            `;
+            
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl).catch(err => console.log('SW registration failed:', err));
+        }
+
+        document.querySelectorAll('.checklist-item input').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                this.parentElement.classList.toggle('completed');
+                const state = Array.from(document.querySelectorAll('.checklist-item input')).map(cb => cb.checked);
+                localStorage.setItem('checklist', JSON.stringify(state));
+            });
+        });
+
+        const saved = localStorage.getItem('checklist');
+        if (saved) {
+            const state = JSON.parse(saved);
+            document.querySelectorAll('.checklist-item input').forEach((cb, idx) => {
+                cb.checked = state[idx];
+                if (state[idx]) cb.parentElement.classList.add('completed');
+            });
+        }
+    </script>
+</body>
+</html>
