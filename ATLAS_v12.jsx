@@ -54,6 +54,21 @@ const acordeonAnim = `
 }
 `;
 
+// Guardado seguro: en algunos entornos (como los artifacts de Claude) localStorage
+// puede estar bloqueado. Con esto la app nunca se rompe: si se puede guardar, guarda;
+// si no, sigue funcionando en memoria mientras esté abierta.
+const storage = {
+  get(key) {
+    try { return window.localStorage.getItem(key); } catch (e) { return null; }
+  },
+  set(key, value) {
+    try { window.localStorage.setItem(key, value); } catch (e) { /* entorno sin almacenamiento */ }
+  },
+  remove(key) {
+    try { window.localStorage.removeItem(key); } catch (e) { /* entorno sin almacenamiento */ }
+  },
+};
+
 // ---- ZONA OBRA: secciones del centro de mando de cada obra ----
 const OBRA_SECCIONES = [
   { id: 'pedidos',      label: 'Pedidos de material', icon: Package,   color: 'from-blue-600 to-blue-700' },
@@ -380,7 +395,7 @@ export default function AtlasApp() {
   };
 
   useEffect(() => {
-    const saved = localStorage.getItem('moyesDataAtlas');
+    const saved = storage.get('moyesDataAtlas');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -415,12 +430,12 @@ export default function AtlasApp() {
           })
         }));
         setObras(cleanedObras);
-      } catch (e) { localStorage.removeItem('moyesDataAtlas'); }
+      } catch (e) { storage.remove('moyesDataAtlas'); }
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('moyesDataAtlas', JSON.stringify({ obras }));
+    storage.set('moyesDataAtlas', JSON.stringify({ obras }));
   }, [obras]);
 
   const crearObraNueva = () => {
