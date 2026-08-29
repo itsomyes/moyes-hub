@@ -6,7 +6,7 @@
     <title>Apify Web App</title>
 </head>
 <body>
-    <h1>Resultados de Apify</h1>
+    <h1>Posts de Instagram</h1>
     <button onclick="ejecutarActor()">Ejecutar Actor</button>
     <pre id="resultados">Esperando...</pre>
 
@@ -17,11 +17,16 @@
             const token = window.prompt('Ingresa tu Apify API token (no se guarda):');
             if (!token) return;
 
+            const username = window.prompt('Ingresa el username de Instagram:');
+            if (!username) return;
+
             const client = new ApifyClient({ token });
 
-            // Ejecutar un Actor y esperar resultados
-            const run = await client.actor('apify/web-scraper').call({
-                startUrls: [{ url: 'https://example.com' }],
+            // Ejecutar el Actor de Instagram Scraper y esperar resultados
+            const run = await client.actor('apify/instagram-scraper').call({
+                directUrls: [`https://www.instagram.com/${username}/`],
+                resultsType: 'posts',
+                resultsLimit: 30,
             });
 
             // Obtener los items del dataset
