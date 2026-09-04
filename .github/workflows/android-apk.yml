@@ -1,0 +1,115 @@
+name: APK Android
+
+# Construye el APK de Moyes Hub en GitHub y lo publica como Release, para
+# poder descargarlo e instalarlo directamente desde el navegador del movil.
+# No hace falta ordenador, ni cuenta de Expo, ni secretos.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - 'claude/**'
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/android-apk.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Compilar y publicar APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Instalar dependencias
+        working-directory: mobile
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: mobile
+        run: npm run typecheck
+
+      # Cada build recibe su propio versionCode para que el APK nuevo se
+      # instale encima del anterior sin desinstalar ni perder la base de datos.
+      - name: Fijar versionCode a partir del numero de ejecucion
+        working-directory: mobile
+        run: |
+          node -e "
+            const fs = require('fs');
+            const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+            app.expo.android.versionCode = Number(process.env.GITHUB_RUN_NUMBER);
+            fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n');
+            console.log('versionCode =', app.expo.android.versionCode);
+          "
+
+      # Genera el proyecto nativo. El template de Expo firma la variante
+      # release con el keystore de debug estandar, cuya huella es fija, asi que
+      # todos los APK quedan firmados igual y se actualizan entre si.
+      - name: Generar proyecto Android
+        working-directory: mobile
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Compilar APK release
+        working-directory: mobile/android
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Renombrar el APK
+        working-directory: mobile
+        run: |
+          mkdir -p ../dist
+          cp android/app/build/outputs/apk/release/app-release.apk \
+             ../dist/moyes-hub-${{ github.run_number }}.apk
+          ls -lh ../dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: moyes-hub-apk
+          path: dist/*.apk
+          if-no-files-found: error
+
+      - name: Publicar Release descargable
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notas.md <<'NOTAS'
+          APK de Moyes Hub, listo para instalar por sideload.
+
+          ## Instalar en el movil
+          1. Abre esta pagina en el navegador del telefono.
+          2. Pulsa el archivo `.apk` de abajo para descargarlo.
+          3. Android avisara de que no puede instalar apps de fuentes desconocidas: pulsa Ajustes, activa el permiso para ese navegador y vuelve atras.
+          4. Instalar. Si Play Protect avisa, "Instalar de todos modos".
+
+          Un APK nuevo se instala encima del anterior sin perder los datos.
+
+          ## Firma
+          Keystore de debug estandar de Android. Sirve para uso personal por sideload; nunca para Play Store.
+          NOTAS
+          gh release create "apk-${{ github.run_number }}" dist/*.apk \
+            --target "${{ github.sha }}" \
+            --title "Moyes Hub APK #${{ github.run_number }}" \
+            --prerelease \
+            --notes-file notas.md
