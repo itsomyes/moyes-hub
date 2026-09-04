@@ -109,7 +109,45 @@ mobile/
 
 ## Generar el APK e instalarlo en el OnePlus 11 5G
 
-### Una vez, en el ordenador
+Hay dos caminos. El primero **no necesita ordenador**.
+
+### Camino A — GitHub construye el APK (sin ordenador, sin cuenta de Expo)
+
+El workflow `.github/workflows/android-apk.yml` compila el APK en los servidores
+de GitHub y lo publica como *Release* descargable.
+
+Se dispara solo con cada push a `main` o a una rama `claude/**` que toque
+`mobile/`. También se puede lanzar a mano desde
+**GitHub → pestaña Actions → APK Android → Run workflow**, que funciona desde el
+navegador del móvil.
+
+Para instalarlo, desde el propio teléfono:
+
+1. Abre **github.com/itsomyes/moyes-hub/releases**.
+2. Entra en la release más reciente (`Moyes Hub APK #N`).
+3. Pulsa el archivo `moyes-hub-N.apk` para descargarlo.
+4. Android avisa: *"Por seguridad, tu teléfono no puede instalar apps
+   desconocidas de esta fuente"*. Pulsa **Ajustes** → activa **Permitir de esta
+   fuente** para el navegador → **Atrás**.
+5. **Instalar** → **Instalar de todos modos** si salta Play Protect.
+
+Cada build recibe su propio `versionCode` (el número de ejecución del workflow),
+así que un APK nuevo se instala encima del anterior **sin perder la base de
+datos**.
+
+**Sobre la firma:** el APK va firmado con el *keystore de debug* estándar de
+Android, que trae la plantilla de Expo. Su huella es fija, así que todas las
+compilaciones quedan firmadas igual y se actualizan entre sí sin desinstalar.
+La contrapartida es que esa clave es pública y conocida: sirve para uso personal
+por sideload, y **nunca** para Play Store ni para repartir la app a terceros.
+Para pasar a una clave propia, genera un keystore, guárdalo como secreto del
+repositorio y sustituye `signingConfigs.debug` por uno de release en
+`android/app/build.gradle` tras el prebuild.
+
+### Camino B — EAS Build (necesita un ordenador)
+
+
+#### Una vez, en el ordenador
 
 ```bash
 cd mobile
@@ -119,7 +157,7 @@ eas login                 # cuenta gratuita de Expo
 eas init                  # crea el projectId y lo escribe en app.json
 ```
 
-### Cada vez que quieras un APK nuevo
+#### Cada vez que quieras un APK nuevo
 
 ```bash
 cd mobile
@@ -134,7 +172,7 @@ podrá actualizar encima y habrá que desinstalar primero.
 El build tarda entre 10 y 20 minutos en la cola gratuita. Al acabar imprime una URL
 y un QR.
 
-### Instalar por sideload en el OnePlus
+#### Instalar por sideload en el OnePlus
 
 **Opción A — directa desde el móvil (la más rápida):**
 1. Abre en el móvil la URL que dio EAS (o escanea el QR con la cámara).
@@ -169,9 +207,14 @@ npm run build:apk:local           # necesita Android SDK + JDK 17 instalados
 
 ### Actualizar la app más adelante
 
-Sube `android.versionCode` en `app.json` (1 → 2 → 3…) antes de cada build nuevo,
-y `version` cuando el cambio sea grande. Luego instala el APK encima: los datos
-de SQLite se conservan.
+Por el **camino A** no hay que hacer nada: el workflow fija el `versionCode` con
+el número de ejecución en cada build.
+
+Por el **camino B** sube `android.versionCode` en `app.json` (1 → 2 → 3…) antes
+de cada build, y `version` cuando el cambio sea grande.
+
+En ambos casos, instalar el APK encima conserva los datos de SQLite, porque la
+firma no cambia entre compilaciones.
 
 ---
 
